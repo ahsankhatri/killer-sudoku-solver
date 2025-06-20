@@ -74,6 +74,8 @@
     <button onclick="resetGrid()">Reset Grid</button>
     <button onclick="undo()">Undo</button>
     <button onclick="redo()">Redo</button>
+    <button onclick="saveToLocal()">Save</button>
+    <button onclick="loadFromLocal()">Load Saved</button>
     <button onclick="solvePuzzle()">Solve</button>
   </p>
 
@@ -194,6 +196,35 @@
       cages = state.cages;
       applyCageColors();
       renderOutput();
+    }
+
+    function saveToLocal() {
+      localStorage.setItem('killerSudokuCages', JSON.stringify(cages));
+      localStorage.setItem('killerSudokuHints', JSON.stringify(hints));
+      alert("Grid and cages saved to browser storage.");
+    }
+
+    function loadFromLocal() {
+      const savedCages = localStorage.getItem('killerSudokuCages');
+      const savedHints = localStorage.getItem('killerSudokuHints');
+
+      if (savedCages && savedHints) {
+        cages = JSON.parse(savedCages);
+        hints = JSON.parse(savedHints);
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const input = cellElements[r][c].querySelector('input');
+            const val = hints[r][c];
+            input.value = val || '';
+            if (val) cellElements[r][c].classList.add('manual-input');
+          }
+        }
+        updateGrid();
+        saveHistory();
+        alert("Saved data loaded.");
+      } else {
+        alert("No saved data found.");
+      }
     }
 
     function toggleSelection(r, c) {
