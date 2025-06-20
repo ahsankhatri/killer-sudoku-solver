@@ -98,32 +98,50 @@ class KillerSudokuSolver
             }
         }
 
-        // Cage constraint check
-        foreach ($this->cages as $cage) {
+        // Is the number big/small enough to be valid?
+        $cageIndex = null;
+        foreach ($this->cages as $index => $cage) {
             if ($this->isCellInCage($row, $col, $cage['cells'])) {
-                $currentValues = [];
-                $sum = 0;
-                $used = [];
+                $cageIndex = $index;
 
-                foreach ($cage['cells'] as [$r, $c]) {
-                    $val = $this->grid[$r][$c];
-                    if ($r === $row && $c === $col) $val = $num;
-                    if ($val > 0) {
-                        if (in_array($val, $used)) return false;
-                        $used[] = $val;
-                        $sum += $val;
+                $cageInfo = $this->cageInfo($cage['cells']);
+
+                // Validate possible number against two empty cells in cage
+                if (($cageInfo['cellCount'] - $cageInfo['filledCount']) == 2) {
+                    $nextAvailableCellDigit = $cage['sum'] - $cageInfo['filledSum'] - $num;
+                    if ($nextAvailableCellDigit > 9) {
+                        return false; // Cage sum too low for this number
+                    } elseif ($nextAvailableCellDigit < 1) {
+                        return false; // Cage sum too high for this number
                     }
                 }
+            }
+        }
 
-                // If cage is full, total must match exactly
-                if (count($used) === count($cage['cells']) && $sum !== $cage['sum']) {
-                    return false;
-                }
+        // Cage constraint check
+        if ($cageIndex !== null) {
+            $cage = $this->cages[$cageIndex];
+            $sum = 0;
+            $used = [];
 
-                // If not full, sum must not exceed target
-                if ($sum > $cage['sum']) {
-                    return false;
+            foreach ($cage['cells'] as [$r, $c]) {
+                $val = $this->grid[$r][$c];
+                if ($r === $row && $c === $col) $val = $num;
+                if ($val > 0) {
+                    if (in_array($val, $used)) return false;
+                    $used[] = $val;
+                    $sum += $val;
                 }
+            }
+
+            // If cage is full, total must match exactly
+            if (count($used) === count($cage['cells']) && $sum !== $cage['sum']) {
+                return false;
+            }
+
+            // If not full, sum must not exceed target
+            if ($sum > $cage['sum']) {
+                return false;
             }
         }
 
@@ -136,6 +154,26 @@ class KillerSudokuSolver
             if ($row === $r && $col === $c) return true;
         }
         return false;
+    }
+
+    private function cageInfo(array $cells): array
+    {
+        $cageInfo = [
+            'cellCount' => count($cells),
+            'filledCount' => 0,
+            'filledSum' => 0,
+        ];
+        foreach ($cells as [$r, $c]) {
+            $val = $this->grid[$r][$c];
+
+            if ($val > 0) {
+                $cageInfo['filledCount']++;
+            }
+
+            $cageInfo['filledSum'] += $val;
+        }
+
+        return $cageInfo;
     }
 
     public function getGrid(): array
