@@ -106,12 +106,32 @@ class KillerSudokuSolver
 
                 $cageInfo = $this->cageInfo($cage['cells']);
 
+                $remainingCells = $cageInfo['cellCount'] - $cageInfo['filledCount'];
+                $nextAvailableCellDigit = $cage['sum'] - $cageInfo['filledSum'] - $num;
+
                 // Validate possible number against two empty cells in cage
-                if (($cageInfo['cellCount'] - $cageInfo['filledCount']) == 2) {
-                    $nextAvailableCellDigit = $cage['sum'] - $cageInfo['filledSum'] - $num;
+                if ($remainingCells == 2) {
                     if ($nextAvailableCellDigit > 9) {
                         return false; // Cage sum too low for this number
                     } elseif ($nextAvailableCellDigit < 1) {
+                        return false; // Cage sum too high for this number
+                    }
+                } elseif ($remainingCells == 3) {
+                    if ($nextAvailableCellDigit > 17) {
+                        return false; // Cage sum too low for this number
+                    } elseif ($nextAvailableCellDigit < 3) {
+                        return false; // Cage sum too high for this number
+                    }
+                } elseif ($remainingCells == 4) {
+                    if ($nextAvailableCellDigit > 24) {
+                        return false; // Cage sum too low for this number
+                    } elseif ($nextAvailableCellDigit < 6) {
+                        return false; // Cage sum too high for this number
+                    }
+                } elseif ($remainingCells == 5) {
+                    if ($nextAvailableCellDigit > 30) {
+                        return false; // Cage sum too low for this number
+                    } elseif ($nextAvailableCellDigit < 10) {
                         return false; // Cage sum too high for this number
                     }
                 }
@@ -156,6 +176,15 @@ class KillerSudokuSolver
         return false;
     }
 
+    /**
+     * Fetch cage details
+     *
+     * @return array{
+     *  cellCount: int,
+     *  filledCount: int,
+     *  filledSum: int
+     * }
+     */
     private function cageInfo(array $cells): array
     {
         $cageInfo = [
